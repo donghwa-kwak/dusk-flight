@@ -1,0 +1,803 @@
+<title>황혼비행</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Maru+Gothic:wght@500;700&family=Space+Mono:wght@400;700&display=swap">
+<style>
+  :root{
+    --sky-top:#221732;
+    --sky-mid:#6a3f57;
+    --sky-bottom:#ff9c68;
+    --sun-glow:#ffd68a;
+    --bamboo-dark:#233b2f;
+    --bamboo:#3d6a4f;
+    --bamboo-light:#79a884;
+    --bamboo-ring:#1b2f25;
+    --ground-a:#221730;
+    --ground-b:#160f21;
+    --grass:#4a3a5c;
+    --bird-gold:#ffc857;
+    --bird-gold-dark:#d98f2e;
+    --bird-wing:#fff3d9;
+    --bird-beak:#e2653a;
+    --paper:#f3e7ce;
+    --paper-edge:#ddc999;
+    --paper-ink:#3a2a1c;
+    --paper-ink-dim:#7a6650;
+    --brass:#b4823f;
+    --brass-light:#e0b978;
+    --page-ink:#f7ecd9;
+    --page-ink-dim:rgba(247,236,217,0.66);
+    --danger:#e2653a;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -8%, rgba(255,214,138,0.16), transparent 60%),
+      linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 46%, var(--sky-bottom) 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:2.5rem 1.25rem;
+    font-family:"Zen Maru Gothic", "Apple SD Gothic Neo", sans-serif;
+    color:var(--page-ink);
+  }
+
+  .page{
+    width:100%;
+    max-width:420px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:1.4rem;
+  }
+
+  .masthead{
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    gap:0.35rem;
+  }
+
+  .eyebrow{
+    margin:0;
+    font-family:"Space Mono", monospace;
+    font-size:11px;
+    letter-spacing:0.22em;
+    color:var(--page-ink-dim);
+  }
+
+  .title{
+    margin:0;
+    font-family:"Yuji Syuku", serif;
+    font-weight:400;
+    font-size:clamp(2.6rem, 11vw, 3.4rem);
+    line-height:1.05;
+    text-wrap:balance;
+    color:var(--page-ink);
+    text-shadow:0 2px 18px rgba(255,157,108,0.35);
+  }
+
+  .subtitle{
+    margin:0;
+    font-size:13px;
+    color:var(--page-ink-dim);
+    letter-spacing:0.02em;
+  }
+
+  .ticket{
+    width:100%;
+    background:var(--paper);
+    border-radius:22px;
+    box-shadow:0 24px 60px -20px rgba(10,4,18,0.65), 0 2px 0 rgba(255,255,255,0.4) inset;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .ticket-meta{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:2px 6px;
+  }
+
+  .meta-item{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+
+  .meta-right{ text-align:right; align-items:flex-end; }
+
+  .meta-label{
+    font-family:"Space Mono", monospace;
+    font-size:9.5px;
+    letter-spacing:0.16em;
+    color:var(--paper-ink-dim);
+  }
+
+  .meta-value{
+    font-family:"Space Mono", monospace;
+    font-weight:700;
+    font-size:14px;
+    color:var(--paper-ink);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .window-frame{
+    position:relative;
+    width:100%;
+    aspect-ratio:400/700;
+    border-radius:26px;
+    background:var(--sky-top);
+    overflow:hidden;
+    border:9px solid var(--brass);
+    box-shadow:
+      inset 0 0 0 2px rgba(0,0,0,0.25),
+      inset 0 10px 24px rgba(0,0,0,0.35),
+      0 1px 0 var(--brass-light) inset;
+  }
+
+  .window-frame canvas{
+    display:block;
+    width:100%;
+    height:100%;
+    touch-action:manipulation;
+    cursor:pointer;
+  }
+
+  .glass-sheen{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(115deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.03) 18%, transparent 32%);
+    pointer-events:none;
+  }
+
+  .score-pill{
+    position:absolute;
+    top:16px;
+    left:50%;
+    transform:translateX(-50%);
+    font-family:"Space Mono", monospace;
+    font-weight:700;
+    font-size:30px;
+    color:#fff;
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 2px 10px rgba(0,0,0,0.45), 0 0 1px rgba(0,0,0,0.6);
+    padding:2px 18px;
+    background:rgba(20,10,25,0.22);
+    border-radius:999px;
+    pointer-events:none;
+    user-select:none;
+  }
+
+  .overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:linear-gradient(180deg, rgba(20,10,20,0.15), rgba(15,8,18,0.55));
+  }
+
+  .overlay.hidden{ display:none; }
+
+  .overlay-card{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    text-align:center;
+    max-width:260px;
+  }
+
+  .overlay-kicker{
+    margin:0;
+    font-family:"Space Mono", monospace;
+    font-size:11px;
+    letter-spacing:0.2em;
+    color:var(--page-ink-dim);
+    text-transform:uppercase;
+  }
+
+  .overlay-text{
+    margin:0;
+    font-size:15px;
+    line-height:1.7;
+    color:var(--page-ink);
+  }
+
+  .overlay-score{
+    margin:2px 0 0;
+    font-family:"Space Mono", monospace;
+    font-weight:700;
+    font-size:56px;
+    color:#fff;
+    line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .overlay-best{
+    margin:0 0 6px;
+    font-family:"Space Mono", monospace;
+    font-size:13px;
+    color:var(--page-ink-dim);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .fly-again{
+    appearance:none;
+    border:none;
+    font-family:"Zen Maru Gothic", sans-serif;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.04em;
+    color:var(--paper-ink);
+    background:linear-gradient(180deg, var(--brass-light), var(--brass));
+    padding:12px 30px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 6px 16px -6px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.4) inset;
+  }
+
+  .fly-again:active{ transform:scale(0.97); }
+  .fly-again:focus-visible{ outline:2px solid var(--page-ink); outline-offset:3px; }
+
+  .perforation{
+    border-top:2px dashed var(--paper-edge);
+    margin:0 4px;
+  }
+
+  .stub{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:2px 10px 4px;
+  }
+
+  .stub-hint{
+    margin:0;
+    font-size:12px;
+    color:var(--paper-ink-dim);
+    letter-spacing:0.01em;
+    text-align:center;
+  }
+
+  .foot-note{
+    margin:0;
+    text-align:center;
+  }
+
+  .foot-note p{
+    margin:0;
+    font-size:12px;
+    color:var(--page-ink-dim);
+  }
+
+  @media (max-width:360px){
+    .title{ font-size:2.3rem; }
+  }
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <p class="eyebrow">탑승권 · BOARDING PASS</p>
+    <h1 class="title">황혼비행</h1>
+    <p class="subtitle">대나무 협곡을 지나, 노을 너머로</p>
+  </header>
+
+  <div class="ticket">
+    <div class="ticket-meta">
+      <div class="meta-item">
+        <span class="meta-label">FLIGHT</span>
+        <span class="meta-value">DK-1897</span>
+      </div>
+      <div class="meta-item meta-right">
+        <span class="meta-label">BEST</span>
+        <span class="meta-value" id="bestMeta">0000</span>
+      </div>
+    </div>
+
+    <div class="window-frame" id="windowFrame">
+      <canvas id="game"></canvas>
+      <div class="glass-sheen" aria-hidden="true"></div>
+      <div class="score-pill" id="scorePill">0</div>
+
+      <div class="overlay" id="startOverlay">
+        <div class="overlay-card">
+          <p class="overlay-kicker">이륙 준비 완료</p>
+          <p class="overlay-text">탭하거나 스페이스바를 눌러<br>날아오르세요</p>
+        </div>
+      </div>
+
+      <div class="overlay hidden" id="gameoverOverlay">
+        <div class="overlay-card">
+          <p class="overlay-kicker">착륙 실패</p>
+          <p class="overlay-score" id="finalScore">0</p>
+          <p class="overlay-best" id="finalBest">최고 기록 0</p>
+          <button class="fly-again" id="retryBtn" type="button">다시 날기</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="perforation" aria-hidden="true"></div>
+
+    <div class="stub">
+      <p class="stub-hint">스페이스바 또는 클릭 · 탭으로 날개짓</p>
+    </div>
+  </div>
+
+  <footer class="foot-note">
+    <p>고도를 유지하며 대나무 사이 틈을 통과하세요.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var LOGICAL_W = 400, LOGICAL_H = 700, GROUND_H = 86;
+  var GRAVITY = 1500, FLAP_V = -430, MAX_FALL = 640;
+  var PIPE_W = 62, PIPE_GAP = 178, PIPE_SPAWN_T = 1.55;
+  var BASE_SPEED = 150;
+  var BIRD_R = 13;
+
+  var frameEl = document.getElementById("windowFrame");
+  var canvas = document.getElementById("game");
+  var ctx = canvas.getContext("2d");
+  var scorePill = document.getElementById("scorePill");
+  var startOverlay = document.getElementById("startOverlay");
+  var gameoverOverlay = document.getElementById("gameoverOverlay");
+  var finalScoreEl = document.getElementById("finalScore");
+  var finalBestEl = document.getElementById("finalBest");
+  var bestMetaEl = document.getElementById("bestMeta");
+  var retryBtn = document.getElementById("retryBtn");
+
+  var best = 0;
+  try {
+    var stored = localStorage.getItem("duskflight_best");
+    if (stored) best = parseInt(stored, 10) || 0;
+  } catch (e) {}
+  bestMetaEl.textContent = pad4(best);
+
+  function pad4(n){
+    n = Math.max(0, Math.floor(n));
+    var s = String(n);
+    while (s.length < 4) s = "0" + s;
+    return s;
+  }
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var w = Math.max(1, Math.round(rect.width * dpr));
+    var h = Math.max(1, Math.round(rect.height * dpr));
+    canvas.width = w;
+    canvas.height = h;
+    var scale = w / LOGICAL_W;
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  var audioCtx = null;
+  function ensureAudio(){
+    if (!audioCtx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+  function tone(freq, dur, type, vol, sweepTo){
+    var ac = ensureAudio();
+    if (!ac) return;
+    var t0 = ac.currentTime;
+    var osc = ac.createOscillator();
+    var gain = ac.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    if (sweepTo) osc.frequency.exponentialRampToValueAtTime(sweepTo, t0 + dur);
+    gain.gain.setValueAtTime(vol, t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(ac.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  }
+  function sfxFlap(){ tone(480, 0.09, "triangle", 0.16, 720); }
+  function sfxScore(){ tone(760, 0.14, "sine", 0.15, 1180); }
+  function sfxHit(){ tone(170, 0.32, "sawtooth", 0.2, 55); }
+
+  function roundRect(x, y, w, h, r){
+    if (h <= 0 || w <= 0) return;
+    var rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+  }
+
+  var stars = [];
+  (function(){
+    var s = 12345;
+    function rnd(){ s = (s * 9301 + 49297) % 233280; return s / 233280; }
+    for (var i = 0; i < 26; i++){
+      stars.push({
+        x: rnd() * LOGICAL_W,
+        y: rnd() * LOGICAL_H * 0.42,
+        r: 0.6 + rnd() * 1.2,
+        phase: rnd() * Math.PI * 2
+      });
+    }
+  })();
+
+  var clouds = [
+    { x: 60, y: 130, s: 1.1, sp: 9 },
+    { x: 260, y: 200, s: 0.8, sp: 6 },
+    { x: 340, y: 90, s: 0.9, sp: 12 }
+  ];
+
+  var bird = { x: 118, y: 300, vy: 0, rot: 0, wingT: 0 };
+  var pipes = [];
+  var score = 0;
+  var scroll = 0;
+  var spawnTimer = 0;
+  var state = "start";
+  var flash = 0;
+  var t = 0;
+
+  function resetBird(){
+    bird.x = 118; bird.y = 300; bird.vy = 0; bird.rot = 0; bird.wingT = 0;
+  }
+
+  function spawnPipe(){
+    var margin = 118;
+    var minC = margin;
+    var maxC = LOGICAL_H - GROUND_H - margin;
+    var gapC = minC + Math.random() * (maxC - minC);
+    pipes.push({
+      x: LOGICAL_W + 10,
+      top: gapC - PIPE_GAP / 2,
+      bottom: gapC + PIPE_GAP / 2,
+      passed: false
+    });
+  }
+
+  function currentSpeed(){
+    return Math.min(BASE_SPEED + score * 4, BASE_SPEED + 95);
+  }
+
+  function startGame(){
+    state = "playing";
+    resetBird();
+    pipes = [];
+    score = 0;
+    spawnTimer = 0.5;
+    flash = 0;
+    scorePill.textContent = "0";
+    startOverlay.classList.add("hidden");
+    gameoverOverlay.classList.add("hidden");
+  }
+
+  function flap(){
+    bird.vy = FLAP_V;
+    bird.wingT += 3.2;
+    sfxFlap();
+  }
+
+  function endGame(){
+    state = "over";
+    flash = 1;
+    sfxHit();
+    if (score > best){
+      best = score;
+      try { localStorage.setItem("duskflight_best", String(best)); } catch (e) {}
+    }
+    bestMetaEl.textContent = pad4(best);
+    finalScoreEl.textContent = String(score);
+    finalBestEl.textContent = "최고 기록 " + best;
+    gameoverOverlay.classList.remove("hidden");
+  }
+
+  function handlePrimary(){
+    ensureAudio();
+    if (state === "start"){ startGame(); }
+    else if (state === "playing"){ flap(); }
+    else if (state === "over"){ startGame(); }
+  }
+
+  frameEl.addEventListener("pointerdown", function(e){
+    if (state === "over" && e.target === retryBtn) return;
+    handlePrimary();
+  });
+  retryBtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    handlePrimary();
+  });
+  window.addEventListener("keydown", function(e){
+    if (e.code === "Space" || e.code === "ArrowUp"){
+      e.preventDefault();
+      handlePrimary();
+    }
+  });
+
+  function update(dt){
+    t += dt;
+    scroll += (state === "playing" ? currentSpeed() : 40) * dt;
+
+    var i;
+    for (i = 0; i < clouds.length; i++){
+      var c = clouds[i];
+      c.x -= c.sp * dt;
+      if (c.x < -70) c.x = LOGICAL_W + 60 + Math.random() * 40;
+    }
+
+    if (state === "start"){
+      bird.y = 300 + Math.sin(t * 2.1) * 10;
+      bird.rot = Math.sin(t * 2.1) * 0.08;
+      bird.wingT += dt * 4.5;
+      return;
+    }
+
+    if (state === "over"){
+      if (bird.y + BIRD_R < LOGICAL_H - GROUND_H){
+        bird.vy += GRAVITY * dt;
+        bird.y += bird.vy * dt;
+      } else {
+        bird.y = LOGICAL_H - GROUND_H - BIRD_R;
+      }
+      if (flash > 0) flash = Math.max(0, flash - dt * 2.6);
+      return;
+    }
+
+    bird.vy += GRAVITY * dt;
+    if (bird.vy > MAX_FALL) bird.vy = MAX_FALL;
+    bird.y += bird.vy * dt;
+    bird.rot = Math.max(-0.5, Math.min(1.15, bird.vy / MAX_FALL * 1.15));
+    bird.wingT += dt * (7 + Math.max(0, -bird.vy) * 0.01);
+
+    if (bird.y - BIRD_R < 0){ bird.y = BIRD_R; bird.vy = 0; }
+
+    spawnTimer -= dt;
+    if (spawnTimer <= 0){ spawnPipe(); spawnTimer = PIPE_SPAWN_T; }
+
+    var spd = currentSpeed();
+    for (i = pipes.length - 1; i >= 0; i--){
+      var p = pipes[i];
+      p.x -= spd * dt;
+      if (!p.passed && p.x + PIPE_W < bird.x - BIRD_R){
+        p.passed = true;
+        score++;
+        scorePill.textContent = String(score);
+        sfxScore();
+      }
+      if (p.x + PIPE_W < -20) pipes.splice(i, 1);
+    }
+
+    for (i = 0; i < pipes.length; i++){
+      var pp = pipes[i];
+      if (bird.x + BIRD_R > pp.x && bird.x - BIRD_R < pp.x + PIPE_W){
+        if (bird.y - BIRD_R < pp.top || bird.y + BIRD_R > pp.bottom){
+          endGame();
+          break;
+        }
+      }
+    }
+
+    if (bird.y + BIRD_R > LOGICAL_H - GROUND_H){
+      bird.y = LOGICAL_H - GROUND_H - BIRD_R;
+      endGame();
+    }
+  }
+
+  function drawSky(){
+    var g = ctx.createLinearGradient(0, 0, 0, LOGICAL_H);
+    g.addColorStop(0, "#221732");
+    g.addColorStop(0.42, "#6a3f57");
+    g.addColorStop(0.72, "#c96b52");
+    g.addColorStop(1, "#ff9c68");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
+
+    var sun = ctx.createRadialGradient(300, 430, 4, 300, 430, 150);
+    sun.addColorStop(0, "rgba(255,214,138,0.55)");
+    sun.addColorStop(1, "rgba(255,214,138,0)");
+    ctx.fillStyle = sun;
+    ctx.fillRect(120, 280, 360, 300);
+
+    for (var i = 0; i < stars.length; i++){
+      var s = stars[i];
+      var a = 0.25 + 0.65 * Math.abs(Math.sin(t * 1.4 + s.phase));
+      ctx.globalAlpha = a * Math.max(0, 1 - s.y / (LOGICAL_H * 0.5));
+      ctx.fillStyle = "#fff8e6";
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.filter = "blur(5px)";
+    for (i = 0; i < clouds.length; i++){
+      var c = clouds[i];
+      ctx.fillStyle = "rgba(255,240,225,0.28)";
+      ctx.beginPath();
+      ctx.ellipse(c.x, c.y, 30 * c.s, 11 * c.s, 0, 0, Math.PI * 2);
+      ctx.ellipse(c.x + 22 * c.s, c.y + 4 * c.s, 20 * c.s, 9 * c.s, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.filter = "none";
+  }
+
+  function mountainLayer(baseY, amp, freq, phaseFactor, color){
+    var phase = scroll * phaseFactor;
+    ctx.beginPath();
+    ctx.moveTo(0, LOGICAL_H);
+    for (var x = 0; x <= LOGICAL_W; x += 10){
+      var wx = x + phase;
+      var y = baseY
+        - Math.sin(wx * freq) * amp
+        - Math.sin(wx * freq * 2.3 + 1.3) * amp * 0.4;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(LOGICAL_W, LOGICAL_H);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  function drawMountains(){
+    mountainLayer(470, 34, 0.012, -0.12, "rgba(58,38,58,0.55)");
+    mountainLayer(510, 46, 0.017, -0.28, "rgba(38,24,42,0.75)");
+  }
+
+  function drawGround(){
+    var y = LOGICAL_H - GROUND_H;
+    var g = ctx.createLinearGradient(0, y, 0, LOGICAL_H);
+    g.addColorStop(0, "#2a1f3d");
+    g.addColorStop(1, "#160f21");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, y, LOGICAL_W, GROUND_H);
+
+    ctx.fillStyle = "#5a4670";
+    ctx.fillRect(0, y, LOGICAL_W, 4);
+
+    var tileW = 34;
+    var off = scroll % tileW;
+    ctx.fillStyle = "#4a3a5c";
+    for (var x = -tileW + (tileW - off); x < LOGICAL_W + tileW; x += tileW){
+      ctx.beginPath();
+      ctx.moveTo(x, y + 4);
+      ctx.lineTo(x + 7, y - 6);
+      ctx.lineTo(x + 14, y + 4);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  function drawStalk(x, yTop, yBottom, isTop){
+    var h = yBottom - yTop;
+    if (h <= 0) return;
+    var grad = ctx.createLinearGradient(x, 0, x + PIPE_W, 0);
+    grad.addColorStop(0, "#233b2f");
+    grad.addColorStop(0.5, "#3d6a4f");
+    grad.addColorStop(1, "#6f9a7c");
+    roundRect(x, yTop, PIPE_W, h, 9);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(20,35,27,0.55)";
+    ctx.lineWidth = 2;
+    var spacing = 44;
+    var start = Math.ceil(yTop / spacing) * spacing;
+    for (var ry = start; ry < yBottom; ry += spacing){
+      ctx.beginPath();
+      ctx.moveTo(x + 4, ry);
+      ctx.lineTo(x + PIPE_W - 4, ry);
+      ctx.stroke();
+    }
+
+    var nodeY = isTop ? yBottom - 15 : yTop;
+    var ng = ctx.createLinearGradient(x - 5, 0, x + PIPE_W + 5, 0);
+    ng.addColorStop(0, "#1b2f25");
+    ng.addColorStop(0.5, "#4a7a5b");
+    ng.addColorStop(1, "#8fbd9a");
+    roundRect(x - 5, nodeY, PIPE_W + 10, 15, 6);
+    ctx.fillStyle = ng;
+    ctx.fill();
+  }
+
+  function drawPipes(){
+    for (var i = 0; i < pipes.length; i++){
+      var p = pipes[i];
+      drawStalk(p.x, 0, p.top, true);
+      drawStalk(p.x, p.bottom, LOGICAL_H - GROUND_H, false);
+    }
+  }
+
+  function drawBird(){
+    ctx.save();
+    ctx.translate(bird.x, bird.y);
+    ctx.rotate(bird.rot);
+
+    var wingAngle = Math.sin(bird.wingT) * 0.55 - 0.15;
+    ctx.save();
+    ctx.translate(-1, -2);
+    ctx.rotate(wingAngle);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-7, -15);
+    ctx.lineTo(9, -3);
+    ctx.closePath();
+    ctx.fillStyle = "#fff3d9";
+    ctx.fill();
+    ctx.restore();
+
+    var bg = ctx.createLinearGradient(0, -10, 0, 9);
+    bg.addColorStop(0, "#ffdb8a");
+    bg.addColorStop(1, "#d98f2e");
+    ctx.beginPath();
+    ctx.moveTo(-16, 0);
+    ctx.lineTo(0, -10);
+    ctx.lineTo(18, 0);
+    ctx.lineTo(0, 9);
+    ctx.closePath();
+    ctx.fillStyle = bg;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(-16, 0);
+    ctx.lineTo(18, 0);
+    ctx.strokeStyle = "rgba(140,90,20,0.45)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(16, -3);
+    ctx.lineTo(25, 0);
+    ctx.lineTo(16, 3);
+    ctx.closePath();
+    ctx.fillStyle = "#e2653a";
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(8, -3, 1.6, 0, Math.PI * 2);
+    ctx.fillStyle = "#2a1c12";
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function render(){
+    ctx.clearRect(0, 0, LOGICAL_W, LOGICAL_H);
+    drawSky();
+    drawMountains();
+    if (state !== "start") drawPipes();
+    drawGround();
+    drawBird();
+
+    if (flash > 0){
+      ctx.fillStyle = "rgba(226,101,58," + (flash * 0.35) + ")";
+      ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
+    }
+  }
+
+  var last = performance.now();
+  function loop(now){
+    var dt = Math.min((now - last) / 1000, 0.033);
+    last = now;
+    update(dt);
+    render();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
