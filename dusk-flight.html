@@ -343,7 +343,7 @@
 
   var LOGICAL_W = 400, LOGICAL_H = 700, GROUND_H = 86;
   var GRAVITY = 1500, FLAP_V = -430, MAX_FALL = 640;
-  var PIPE_W = 62, PIPE_GAP = 178, PIPE_SPAWN_T = 1.55;
+  var PIPE_W = 62, PIPE_GAP_MIN = 148, PIPE_GAP_MAX = 212, PIPE_SPAWN_T = 1.55;
   var BASE_SPEED = 150;
   var BIRD_R = 13;
 
@@ -460,14 +460,15 @@
   }
 
   function spawnPipe(){
-    var margin = 118;
-    var minC = margin;
-    var maxC = LOGICAL_H - GROUND_H - margin;
+    var edgeMargin = 20;
+    var gap = PIPE_GAP_MIN + Math.random() * (PIPE_GAP_MAX - PIPE_GAP_MIN);
+    var minC = gap / 2 + edgeMargin;
+    var maxC = LOGICAL_H - GROUND_H - gap / 2 - edgeMargin;
     var gapC = minC + Math.random() * (maxC - minC);
     pipes.push({
       x: LOGICAL_W + 10,
-      top: gapC - PIPE_GAP / 2,
-      bottom: gapC + PIPE_GAP / 2,
+      top: gapC - gap / 2,
+      bottom: gapC + gap / 2,
       passed: false
     });
   }
