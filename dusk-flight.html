@@ -175,6 +175,30 @@
     user-select:none;
   }
 
+  .lives-row{
+    position:absolute;
+    top:56px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:7px;
+    pointer-events:none;
+  }
+
+  .life-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:var(--bird-gold);
+    box-shadow:0 1px 3px rgba(0,0,0,0.4);
+  }
+
+  .life-dot.lost{
+    background:transparent;
+    border:1.5px solid rgba(255,255,255,0.45);
+    box-shadow:none;
+  }
+
   .overlay{
     position:absolute;
     inset:0;
@@ -297,6 +321,10 @@
         <span class="meta-label">FLIGHT</span>
         <span class="meta-value">DK-1897</span>
       </div>
+      <div class="meta-item">
+        <span class="meta-label">LIVES</span>
+        <span class="meta-value" id="livesMeta">3/3</span>
+      </div>
       <div class="meta-item meta-right">
         <span class="meta-label">BEST</span>
         <span class="meta-value" id="bestMeta">0000</span>
@@ -307,6 +335,11 @@
       <canvas id="game"></canvas>
       <div class="glass-sheen" aria-hidden="true"></div>
       <div class="score-pill" id="scorePill">0</div>
+      <div class="lives-row" id="livesRow" aria-hidden="true">
+        <span class="life-dot"></span>
+        <span class="life-dot"></span>
+        <span class="life-dot"></span>
+      </div>
 
       <div class="overlay" id="startOverlay">
         <div class="overlay-card">
@@ -346,6 +379,8 @@
   var PIPE_W = 62, PIPE_GAP_MIN = 148, PIPE_GAP_MAX = 212, PIPE_SPAWN_T = 1.55;
   var BASE_SPEED = 150;
   var BIRD_R = 13;
+  var MAX_LIVES = 3;
+  var INVINCIBLE_T = 2.0;
 
   var frameEl = document.getElementById("windowFrame");
   var canvas = document.getElementById("game");
@@ -356,6 +391,8 @@
   var finalScoreEl = document.getElementById("finalScore");
   var finalBestEl = document.getElementById("finalBest");
   var bestMetaEl = document.getElementById("bestMeta");
+  var livesMetaEl = document.getElementById("livesMeta");
+  var lifeDots = document.querySelectorAll("#livesRow .life-dot");
   var retryBtn = document.getElementById("retryBtn");
 
   var best = 0;
@@ -454,9 +491,19 @@
   var state = "start";
   var flash = 0;
   var t = 0;
+  var lives = MAX_LIVES;
+  var invincible = false;
+  var invincibleTimer = 0;
 
   function resetBird(){
     bird.x = 118; bird.y = 300; bird.vy = 0; bird.rot = 0; bird.wingT = 0;
+  }
+
+  function updateLivesUI(){
+    livesMetaEl.textContent = lives + "/" + MAX_LIVES;
+    for (var i = 0; i < lifeDots.length; i++){
+      lifeDots[i].classList.toggle("lost", i >= lives);
+    }
   }
 
   function spawnPipe(){
@@ -484,6 +531,10 @@
     score = 0;
     spawnTimer = 0.5;
     flash = 0;
+    lives = MAX_LIVES;
+    invincible = false;
+    invincibleTimer = 0;
+    updateLivesUI();
     scorePill.textContent = "0";
     startOverlay.classList.add("hidden");
     gameoverOverlay.classList.add("hidden");
@@ -495,10 +546,22 @@
     sfxFlap();
   }
 
-  function endGame(){
-    state = "over";
+  function loseLife(){
     flash = 1;
     sfxHit();
+    lives--;
+    updateLivesUI();
+    if (lives <= 0){
+      endGame();
+    } else {
+      invincible = true;
+      invincibleTimer = INVINCIBLE_T;
+      bird.vy = FLAP_V * 0.75;
+    }
+  }
+
+  function endGame(){
+    state = "over";
     if (score > best){
       best = score;
       try { localStorage.setItem("duskflight_best", String(best)); } catch (e) {}
@@ -560,6 +623,12 @@
       return;
     }
 
+    if (flash > 0) flash = Math.max(0, flash - dt * 2.6);
+    if (invincible){
+      invincibleTimer -= dt;
+      if (invincibleTimer <= 0){ invincible = false; invincibleTimer = 0; }
+    }
+
     bird.vy += GRAVITY * dt;
     if (bird.vy > MAX_FALL) bird.vy = MAX_FALL;
     bird.y += bird.vy * dt;
@@ -584,19 +653,25 @@
       if (p.x + PIPE_W < -20) pipes.splice(i, 1);
     }
 
-    for (i = 0; i < pipes.length; i++){
-      var pp = pipes[i];
-      if (bird.x + BIRD_R > pp.x && bird.x - BIRD_R < pp.x + PIPE_W){
-        if (bird.y - BIRD_R < pp.top || bird.y + BIRD_R > pp.bottom){
-          endGame();
-          break;
+    if (!invincible){
+      for (i = 0; i < pipes.length; i++){
+        var pp = pipes[i];
+        if (bird.x + BIRD_R > pp.x && bird.x - BIRD_R < pp.x + PIPE_W){
+          if (bird.y - BIRD_R < pp.top || bird.y + BIRD_R > pp.bottom){
+            loseLife();
+            break;
+          }
         }
       }
     }
 
     if (bird.y + BIRD_R > LOGICAL_H - GROUND_H){
       bird.y = LOGICAL_H - GROUND_H - BIRD_R;
-      endGame();
+      if (!invincible){
+        loseLife();
+      } else if (bird.vy > 0){
+        bird.vy = 0;
+      }
     }
   }
 
@@ -783,7 +858,14 @@
     drawMountains();
     if (state !== "start") drawPipes();
     drawGround();
-    drawBird();
+
+    if (invincible && Math.floor(t * 10) % 2 !== 0){
+      ctx.globalAlpha = 0.3;
+      drawBird();
+      ctx.globalAlpha = 1;
+    } else {
+      drawBird();
+    }
 
     if (flash > 0){
       ctx.fillStyle = "rgba(226,101,58," + (flash * 0.35) + ")";
